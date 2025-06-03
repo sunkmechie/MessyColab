@@ -29,6 +29,7 @@ header {
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   z-index: 2;
+  flex-wrap: wrap;
 }
 
 .toolbar button,
@@ -40,23 +41,49 @@ header {
   background-color: #f0f0f0;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
-.toolbar button:hover {
+.toolbar button:hover,
+.toolbar input[type="color"]:hover,
+.toolbar input[type="range"]:hover {
   background-color: #ddd;
+  transform: scale(1.02);
+}
+
+.toolbar button.active {
+  background-color: #007bff;
+  color: white;
+  border: none;
 }
 
 main {
   flex: 1;
   position: relative;
+  overflow: hidden;
 }
 
 canvas#whiteboard {
   position: absolute;
   top: 0;
   left: 0;
+  background-color: #ffffff;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  cursor: crosshair;
   width: 100%;
   height: 100%;
-  cursor: crosshair;
+}
+
+footer {
+  text-align: center;
+  padding: 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .toolbar {
+    justify-content: space-around;
+  }
 }
