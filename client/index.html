@@ -3,13 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Collab App</title>
+  <title>MessyColab Whiteboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="whiteboard.js"></script>
+  <script defer src="ws.js"></script>
 </head>
 <body>
-  <h1>Hello from Client!</h1>
-  <canvas id="whiteboard" width="600" height="400" style="border:1px solid #ccc;"></canvas>
-  <div id="chat">
-    <textarea placeholder="Type your message..."></textarea>
+  <header>
+    <h1>🖊️ MessyColab</h1>
+  </header>
+
+  <div class="toolbar">
+    <button id="pen">Pen</button>
+    <button id="eraser">Eraser</button>
+    <button id="clear">Clear</button>
+    <input type="color" id="colorPicker" value="#000000" />
+    <input type="range" id="thickness" min="1" max="20" value="3" />
   </div>
+
+  <main>
+    <canvas id="whiteboard"></canvas>
+  </main>
 </body>
 </html>
