@@ -33,6 +33,7 @@ canvas.addEventListener("mouseup", () => {
   drawing = false;
 });
 
+// Update color and thickness
 document.getElementById("colorPicker").addEventListener("input", (e) => {
   color = e.target.value;
 });
@@ -41,15 +42,24 @@ document.getElementById("thickness").addEventListener("input", (e) => {
   thickness = e.target.value;
 });
 
-document.getElementById("pen").addEventListener("click", () => {
+// Tool selection logic with active button highlight
+const buttons = document.querySelectorAll(".toolbar button");
+
+function setActiveTool(selected) {
+  buttons.forEach(btn => btn.classList.remove("active"));
+  selected.classList.add("active");
+}
+
+document.getElementById("pen").addEventListener("click", (e) => {
   tool = "pen";
+  setActiveTool(e.target);
 });
 
-document.getElementById("eraser").addEventListener("click", () => {
+document.getElementById("eraser").addEventListener("click", (e) => {
   tool = "eraser";
+  setActiveTool(e.target);
 });
 
 document.getElementById("clear").addEventListener("click", () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
-
