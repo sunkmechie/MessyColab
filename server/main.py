@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from typing import List
 
 app = FastAPI()
@@ -15,11 +16,17 @@ app.add_middleware(
 
 print("Current working directory:", os.getcwd())
 
+# Path to your client folder containing index.html, style.css, js files etc.
 client_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client")
 print("Serving static files from:", client_dir)
 
-# Mount static files under '/static' instead of '/'
+# Mount static files under /static
 app.mount("/static", StaticFiles(directory=client_dir), name="static")
+
+# Serve index.html explicitly at root /
+@app.get("/")
+async def root():
+    return FileResponse(os.path.join(client_dir, "index.html"))
 
 class ConnectionManager:
     def __init__(self):
