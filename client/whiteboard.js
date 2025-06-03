@@ -6,7 +6,9 @@ let tool = "pen";
 let color = document.getElementById("colorPicker").value;
 let thickness = document.getElementById("thickness").value;
 
-// Resize canvas to fill the window
+let lastX = 0;
+let lastY = 0;
+
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight - document.querySelector(".toolbar").offsetHeight;
@@ -16,24 +18,39 @@ resizeCanvas();
 
 canvas.addEventListener("mousedown", (e) => {
   drawing = true;
-  ctx.beginPath();
-  ctx.moveTo(e.offsetX, e.offsetY);
+  lastX = e.offsetX;
+  lastY = e.offsetY;
 });
 
 canvas.addEventListener("mousemove", (e) => {
   if (!drawing) return;
-  ctx.lineTo(e.offsetX, e.offsetY);
+
+  const currentX = e.offsetX;
+  const currentY = e.offsetY;
+
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(currentX, currentY);
   ctx.strokeStyle = tool === "eraser" ? "#ffffff" : color;
   ctx.lineWidth = thickness;
   ctx.lineCap = "round";
   ctx.stroke();
+
+  // Send drawing data to server
+  if (tool !== "eraser") {
+    emitDraw(lastX, lastY, currentX, currentY, color, thickness);
+  } else {
+    emitDraw(lastX, lastY, currentX, currentY, "#ffffff", thickness);
+  }
+
+  lastX = currentX;
+  lastY = currentY;
 });
 
 canvas.addEventListener("mouseup", () => {
   drawing = false;
 });
 
-// Update color and thickness
 document.getElementById("colorPicker").addEventListener("input", (e) => {
   color = e.target.value;
 });
@@ -42,24 +59,15 @@ document.getElementById("thickness").addEventListener("input", (e) => {
   thickness = e.target.value;
 });
 
-// Tool selection logic with active button highlight
-const buttons = document.querySelectorAll(".toolbar button");
-
-function setActiveTool(selected) {
-  buttons.forEach(btn => btn.classList.remove("active"));
-  selected.classList.add("active");
-}
-
-document.getElementById("pen").addEventListener("click", (e) => {
+document.getElementById("pen").addEventListener("click", () => {
   tool = "pen";
-  setActiveTool(e.target);
 });
 
-document.getElementById("eraser").addEventListener("click", (e) => {
+document.getElementById("eraser").addEventListener("click", () => {
   tool = "eraser";
-  setActiveTool(e.target);
 });
 
 document.getElementById("clear").addEventListener("click", () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  emitClear();
 });
