@@ -18,7 +18,8 @@ print("Current working directory:", os.getcwd())
 client_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client")
 print("Serving static files from:", client_dir)
 
-app.mount("/", StaticFiles(directory=client_dir, html=True), name="static")
+# Mount static files under '/static' instead of '/'
+app.mount("/static", StaticFiles(directory=client_dir), name="static")
 
 class ConnectionManager:
     def __init__(self):
