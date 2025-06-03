@@ -1,0 +1,53 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+.env
+.venv/
+venv/
+ENV/
+env/
+pip-log.txt
+*.log
+
+# === FastAPI / Uvicorn ===
+*.db
+instance/
+*.sqlite3
+
+# === Frontend / Node (if needed later) ===
+node_modules/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === OS / Editor ===
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === Deployment ===
+.env.local
+.env.production
+.env.development
+
+# === Logs and caches ===
+*.log
+*.gz
+.cache/
+*.tmp
+
+# === Output folders ===
+frontend/dist/
+frontend/build/
