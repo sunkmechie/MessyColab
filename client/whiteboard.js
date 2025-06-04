@@ -9,15 +9,27 @@ let thickness = document.getElementById("thickness").value;
 let lastX = 0;
 let lastY = 0;
 
-// Resize canvas to fill the window minus toolbar height
+// Resize canvas to fit the screen
 function resizeCanvas() {
   canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight - document.querySelector(".toolbar").offsetHeight - document.querySelector("header").offsetHeight;
+  canvas.height =
+    window.innerHeight -
+    document.querySelector(".toolbar").offsetHeight -
+    document.querySelector("header").offsetHeight;
 }
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-// Start drawing
+// Update cursor style
+function updateCursor() {
+  if (tool === "pen") {
+    canvas.style.cursor = "crosshair";
+  } else if (tool === "eraser") {
+    canvas.style.cursor = "not-allowed";
+  }
+}
+
+// Handle drawing start
 canvas.addEventListener("mousedown", (e) => {
   drawing = true;
   lastX = e.offsetX;
@@ -26,7 +38,7 @@ canvas.addEventListener("mousedown", (e) => {
   ctx.moveTo(lastX, lastY);
 });
 
-// Draw and emit draw event for synchronization
+// Handle drawing
 canvas.addEventListener("mousemove", (e) => {
   if (!drawing) return;
 
@@ -41,8 +53,14 @@ canvas.addEventListener("mousemove", (e) => {
   ctx.lineCap = "round";
   ctx.stroke();
 
-  // Emit draw event to WebSocket server
-  window.emitDraw(lastX, lastY, currentX, currentY, tool === "eraser" ? "#ffffff" : color, thickness);
+  window.emitDraw(
+    lastX,
+    lastY,
+    currentX,
+    currentY,
+    tool === "eraser" ? "#ffffff" : color,
+    thickness
+  );
 
   lastX = currentX;
   lastY = currentY;
@@ -52,17 +70,16 @@ canvas.addEventListener("mousemove", (e) => {
 canvas.addEventListener("mouseup", () => {
   drawing = false;
 });
-
 canvas.addEventListener("mouseout", () => {
   drawing = false;
 });
 
-// Update color when user picks a new color
+// Color picker
 document.getElementById("colorPicker").addEventListener("input", (e) => {
   color = e.target.value;
 });
 
-// Update thickness when user changes range slider
+// Thickness slider
 document.getElementById("thickness").addEventListener("input", (e) => {
   thickness = e.target.value;
 });
@@ -70,15 +87,30 @@ document.getElementById("thickness").addEventListener("input", (e) => {
 // Switch to pen tool
 document.getElementById("pen").addEventListener("click", () => {
   tool = "pen";
+  updateCursor();
+  setActiveTool("pen");
 });
 
 // Switch to eraser tool
 document.getElementById("eraser").addEventListener("click", () => {
   tool = "eraser";
+  updateCursor();
+  setActiveTool("eraser");
 });
 
-// Clear canvas locally and emit clear event to server
+// Clear canvas
 document.getElementById("clear").addEventListener("click", () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   window.emitClear();
 });
+
+// Update toolbar button highlight
+function setActiveTool(selected) {
+  document.getElementById("pen").classList.remove("active");
+  document.getElementById("eraser").classList.remove("active");
+  document.getElementById(selected).classList.add("active");
+}
+
+// Initial state
+updateCursor();
+setActiveTool("pen");
