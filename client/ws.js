@@ -24,7 +24,14 @@ socket.addEventListener("message", (event) => {
   if (msg.type === "draw") {
     drawFromServer(msg.data);
   } else if (msg.type === "clear") {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // For Fabric.js, we'll clear the canvas using fabric.Canvas API
+    if (window.fabricCanvas) {
+      window.fabricCanvas.clear();
+    } else if (typeof ctx !== "undefined") {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  } else if (msg.type === "fabric_path") {
+    window.drawFromServerFabric(msg.data);
   }
 });
 
@@ -44,6 +51,7 @@ function updateStatus(status) {
 }
 
 // --- Drawing and clearing functions ---
+// These are for legacy freehand drawing (if needed)
 function emitDraw(x0, y0, x1, y1, color, thickness) {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(
@@ -62,6 +70,8 @@ function emitClear() {
 }
 
 function drawFromServer({ x0, y0, x1, y1, color, thickness }) {
+  if (typeof ctx === "undefined") return;
+
   ctx.beginPath();
   ctx.moveTo(x0, y0);
   ctx.lineTo(x1, y1);
@@ -71,5 +81,32 @@ function drawFromServer({ x0, y0, x1, y1, color, thickness }) {
   ctx.stroke();
 }
 
+// --- Fabric.js drawing functions ---
+function emitFabricPath(pathData) {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({
+      type: "fabric_path",
+      data: pathData
+    }));
+  }
+}
+
+// This function is called when receiving fabric_path data from server
+function drawFromServerFabric(pathData) {
+  if (!window.fabricCanvas) return;
+
+  // Recreate fabric.Path from received SVG path string and options
+  const fabricPath = new fabric.Path(pathData.path, pathData.options);
+  fabricPath.set(pathData.options);
+  fabricPath.setCoords();
+
+  // Add the path to the canvas but do not render yet
+  window.fabricCanvas.add(fabricPath);
+  window.fabricCanvas.requestRenderAll();
+}
+
 window.emitDraw = emitDraw;
 window.emitClear = emitClear;
+
+window.emitFabricPath = emitFabricPath;
+window.drawFromServerFabric = drawFromServerFabric;
