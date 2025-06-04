@@ -1,9 +1,23 @@
 const socket = new WebSocket("ws://localhost:8000/ws");
+const statusIndicator = document.getElementById("status-indicator");
 
+// --- WebSocket status handling ---
 socket.addEventListener("open", () => {
   console.log("Connected to WebSocket server.");
+  updateStatus("connected");
 });
 
+socket.addEventListener("close", () => {
+  console.log("WebSocket connection closed.");
+  updateStatus("disconnected");
+});
+
+socket.addEventListener("error", () => {
+  console.log("WebSocket error occurred.");
+  updateStatus("disconnected");
+});
+
+// --- Message handling ---
 socket.addEventListener("message", (event) => {
   const msg = JSON.parse(event.data);
 
@@ -14,7 +28,22 @@ socket.addEventListener("message", (event) => {
   }
 });
 
-// Function to send drawing data to server
+// --- UI updater for status ---
+function updateStatus(status) {
+  if (!statusIndicator) return;
+
+  if (status === "connected") {
+    statusIndicator.textContent = "● Connected";
+    statusIndicator.classList.remove("status-disconnected");
+    statusIndicator.classList.add("status-connected");
+  } else {
+    statusIndicator.textContent = "● Disconnected";
+    statusIndicator.classList.remove("status-connected");
+    statusIndicator.classList.add("status-disconnected");
+  }
+}
+
+// --- Drawing and clearing functions ---
 function emitDraw(x0, y0, x1, y1, color, thickness) {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(
@@ -26,14 +55,12 @@ function emitDraw(x0, y0, x1, y1, color, thickness) {
   }
 }
 
-// Function to send clear command to server
 function emitClear() {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({ type: "clear" }));
   }
 }
 
-// Function to draw on canvas when receiving data from server
 function drawFromServer({ x0, y0, x1, y1, color, thickness }) {
   ctx.beginPath();
   ctx.moveTo(x0, y0);
@@ -44,6 +71,5 @@ function drawFromServer({ x0, y0, x1, y1, color, thickness }) {
   ctx.stroke();
 }
 
-// Expose functions globally so whiteboard.js can call them
 window.emitDraw = emitDraw;
 window.emitClear = emitClear;
