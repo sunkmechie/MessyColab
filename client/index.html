@@ -4,23 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MessyColab Whiteboard</title>
-<link rel="stylesheet" href="/static/style.css">
-<script defer src="/static/ws.js"></script>
-<script defer src="/static/whiteboard.js"></script>
-
- 
+  <link rel="stylesheet" href="style.css">
+  <script defer src="ws.js"></script>
+  <script defer src="whiteboard.js"></script>
 </head>
 <body>
   <header>
     <h1>🖊️ MessyColab</h1>
+    <span id="status-indicator" title="WebSocket connection status">● Connecting...</span>
   </header>
 
   <div class="toolbar">
-    <button id="pen">Pen</button>
-    <button id="eraser">Eraser</button>
-    <button id="clear">Clear</button>
-    <input type="color" id="colorPicker" value="#000000" />
-    <input type="range" id="thickness" min="1" max="20" value="3" />
+    <button id="pen" title="Pen Tool">✏️</button>
+    <button id="eraser" title="Eraser Tool">🧽</button>
+    <button id="clear" title="Clear Whiteboard">🗑️</button>
+    <input type="color" id="colorPicker" title="Select Pen Color" value="#000000" />
+    <input type="range" id="thickness" title="Stroke Thickness" min="1" max="20" value="3" />
   </div>
 
   <main>
