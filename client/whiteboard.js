@@ -1,116 +1,103 @@
-const canvas = document.getElementById("whiteboard");
-const ctx = canvas.getContext("2d");
+// Initialize Fabric.js canvas and attach to window for ws.js access
+const fabricCanvas = new fabric.Canvas('whiteboard', {
+  isDrawingMode: true,
+});
+window.fabricCanvas = fabricCanvas;
 
-let drawing = false;
-let tool = "pen";
-let color = document.getElementById("colorPicker").value;
-let thickness = document.getElementById("thickness").value;
+// Setup initial tool and styles
+let tool = 'pen';
+let color = document.getElementById('colorPicker').value;
+let thickness = parseInt(document.getElementById('thickness').value, 10);
 
-let lastX = 0;
-let lastY = 0;
-
-// Resize canvas to fit the screen
+// Resize canvas to fit screen
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height =
-    window.innerHeight -
-    document.querySelector(".toolbar").offsetHeight -
-    document.querySelector("header").offsetHeight;
+  const toolbarHeight = document.querySelector('.toolbar').offsetHeight;
+  const headerHeight = document.querySelector('header').offsetHeight;
+
+  fabricCanvas.setWidth(window.innerWidth);
+  fabricCanvas.setHeight(window.innerHeight - toolbarHeight - headerHeight);
 }
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Update cursor style
-function updateCursor() {
-  if (tool === "pen") {
-    canvas.style.cursor = "crosshair";
-  } else if (tool === "eraser") {
-    canvas.style.cursor = "not-allowed";
+// Update Fabric.js brush properties based on tool, color, thickness
+function updateBrush() {
+  if (tool === 'pen') {
+    fabricCanvas.isDrawingMode = true;
+    fabricCanvas.freeDrawingBrush = new fabric.PencilBrush(fabricCanvas);
+    fabricCanvas.freeDrawingBrush.color = color;
+    fabricCanvas.freeDrawingBrush.width = thickness;
+    fabricCanvas.freeDrawingBrush.decimate = 5; // smoothing
+  } else if (tool === 'eraser') {
+    fabricCanvas.isDrawingMode = true;
+    fabricCanvas.freeDrawingBrush = new fabric.PencilBrush(fabricCanvas);
+    fabricCanvas.freeDrawingBrush.color = '#ffffff'; // white eraser
+    fabricCanvas.freeDrawingBrush.width = thickness * 2; // eraser a bit bigger
+  } else {
+    fabricCanvas.isDrawingMode = false;
   }
 }
+updateBrush();
 
-// Handle drawing start
-canvas.addEventListener("mousedown", (e) => {
-  drawing = true;
-  lastX = e.offsetX;
-  lastY = e.offsetY;
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
+// Emit Fabric.js path data on drawing complete
+fabricCanvas.on('path:created', (event) => {
+  const path = event.path;
+  const pathData = {
+    path: path.path, // Array of path commands
+    options: {
+      fill: path.fill,
+      stroke: path.stroke,
+      strokeWidth: path.strokeWidth,
+      strokeLineCap: path.strokeLineCap,
+      strokeLineJoin: path.strokeLineJoin,
+      strokeMiterLimit: path.strokeMiterLimit,
+      scaleX: path.scaleX,
+      scaleY: path.scaleY,
+      originX: path.originX,
+      originY: path.originY,
+      left: path.left,
+      top: path.top,
+      pathOffset: path.pathOffset,
+      // Add any other relevant options you need to sync
+    },
+  };
+  // Note: fabric.Path 'path' is an array of arrays, not an SVG string. We'll send it as JSON.
+  window.emitFabricPath(pathData);
 });
 
-// Handle drawing
-canvas.addEventListener("mousemove", (e) => {
-  if (!drawing) return;
-
-  const currentX = e.offsetX;
-  const currentY = e.offsetY;
-
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(currentX, currentY);
-  ctx.strokeStyle = tool === "eraser" ? "#ffffff" : color;
-  ctx.lineWidth = thickness;
-  ctx.lineCap = "round";
-  ctx.stroke();
-
-  window.emitDraw(
-    lastX,
-    lastY,
-    currentX,
-    currentY,
-    tool === "eraser" ? "#ffffff" : color,
-    thickness
-  );
-
-  lastX = currentX;
-  lastY = currentY;
-});
-
-// Stop drawing
-canvas.addEventListener("mouseup", () => {
-  drawing = false;
-});
-canvas.addEventListener("mouseout", () => {
-  drawing = false;
-});
-
-// Color picker
-document.getElementById("colorPicker").addEventListener("input", (e) => {
-  color = e.target.value;
-});
-
-// Thickness slider
-document.getElementById("thickness").addEventListener("input", (e) => {
-  thickness = e.target.value;
-});
-
-// Switch to pen tool
-document.getElementById("pen").addEventListener("click", () => {
-  tool = "pen";
-  updateCursor();
-  setActiveTool("pen");
-});
-
-// Switch to eraser tool
-document.getElementById("eraser").addEventListener("click", () => {
-  tool = "eraser";
-  updateCursor();
-  setActiveTool("eraser");
-});
-
-// Clear canvas
-document.getElementById("clear").addEventListener("click", () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+// Handle clear canvas button
+document.getElementById('clear').addEventListener('click', () => {
+  fabricCanvas.clear();
   window.emitClear();
 });
 
-// Update toolbar button highlight
-function setActiveTool(selected) {
-  document.getElementById("pen").classList.remove("active");
-  document.getElementById("eraser").classList.remove("active");
-  document.getElementById(selected).classList.add("active");
-}
+// Toolbar events to update tool, color, thickness
+document.getElementById('colorPicker').addEventListener('input', (e) => {
+  color = e.target.value;
+  updateBrush();
+});
 
-// Initial state
-updateCursor();
-setActiveTool("pen");
+document.getElementById('thickness').addEventListener('input', (e) => {
+  thickness = parseInt(e.target.value, 10);
+  updateBrush();
+});
+
+document.getElementById('pen').addEventListener('click', () => {
+  tool = 'pen';
+  updateBrush();
+  setActiveTool('pen');
+});
+
+document.getElementById('eraser').addEventListener('click', () => {
+  tool = 'eraser';
+  updateBrush();
+  setActiveTool('eraser');
+});
+
+// Toolbar button highlight logic (unchanged)
+function setActiveTool(selected) {
+  document.getElementById('pen').classList.remove('active');
+  document.getElementById('eraser').classList.remove('active');
+  document.getElementById(selected).classList.add('active');
+}
+setActiveTool('pen');
